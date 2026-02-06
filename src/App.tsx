@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
 import { motion } from "motion/react";
+import confettiLib from "canvas-confetti";
 
 // Memoized Heart Component
 const FloatingHeart = memo(
@@ -380,7 +381,44 @@ function App() {
 
   const handleYesClick = useCallback(() => {
     setShowCelebration(true);
-  }, []);
+
+    // Massive confetti explosion!
+    const duration = 5000;
+    const animationEnd = Date.now() + duration;
+    const defaults = {
+      startVelocity: 30,
+      spread: 360,
+      ticks: 60,
+      zIndex: 9999,
+      colors: ["#ff1493", "#ff69b4", "#ff85c1", "#ffc0cb", "#ff6b9d"],
+    };
+
+    const randomInRange = (min: number, max: number) => {
+      return Math.random() * (max - min) + min;
+    };
+
+    const interval = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = isMobile ? 30 : 50;
+
+      // Multiple confetti bursts from different positions
+      confettiLib({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+      });
+      confettiLib({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+      });
+    }, 250);
+  }, [isMobile]);
 
   // Memoize sliced arrays to prevent re-computation
   const visibleHearts = useMemo(
