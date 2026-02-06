@@ -274,12 +274,10 @@ function App() {
         <motion.div
           key={media.id}
           id={`media-${media.id}`}
-          className="absolute pointer-events-none"
+          className="absolute pointer-events-none w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] md:w-[120px] md:h-[120px]"
           style={{
             left: `${media.startX}%`,
             top: `${media.startY}%`,
-            width: `${media.size}px`,
-            height: `${media.size}px`,
           }}
           animate={{
             left: `${media.endX}%`,
