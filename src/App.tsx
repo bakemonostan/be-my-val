@@ -154,7 +154,6 @@ import video5 from "./assets/WhatsApp Video 2026-02-06 at 12.20.52.mp4";
 
 function App() {
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [showStillYes, setShowStillYes] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [mediaOffsets, setMediaOffsets] = useState<{ x: number; y: number }[]>(
     []
@@ -335,8 +334,6 @@ function App() {
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
-      // Stop running away if button was clicked
-      if (showStillYes) return;
       // Disable on mobile for better performance
       if (isMobile) return;
 
@@ -381,12 +378,13 @@ function App() {
         setPosition({ x: newX, y: newY });
       }
     },
-    [showStillYes, isMobile, position.x, position.y]
+    [isMobile, position.x, position.y]
   );
 
-  const handleNoClick = useCallback(() => {
-    setShowStillYes(true);
-    // Don't reset - keep it as "Still Yes" permanently
+  const handleNoClick = useCallback((e: React.MouseEvent) => {
+    // Prevent the click - button should never be clickable
+    e.preventDefault();
+    e.stopPropagation();
   }, []);
 
   // Memoize sliced arrays to prevent re-computation
@@ -469,27 +467,13 @@ function App() {
           animate={{ x: position.x, y: position.y }}
           transition={{ type: "spring", stiffness: 400, damping: 15 }}
         >
-          <motion.button
+          <button
             ref={buttonRef}
             onClick={handleNoClick}
-            animate={
-              showStillYes
-                ? {
-                    scale: [1, 3, 1],
-                    backgroundColor: ["#e5e7eb", "#ef4444", "#ef4444"],
-                  }
-                : { scale: 1 }
-            }
-            transition={{ duration: 0.8 }}
-            className="px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 text-lg sm:text-xl md:text-2xl font-bold rounded-full shadow-lg select-none"
-            style={
-              showStillYes
-                ? { color: "white", backgroundColor: "#ef4444" }
-                : { color: "#4b5563", backgroundColor: "#e5e7eb" }
-            }
+            className="px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 text-lg sm:text-xl md:text-2xl font-bold rounded-full shadow-lg select-none bg-gray-200 text-gray-600 cursor-pointer"
           >
-            {showStillYes ? "Still Yes boo 😘" : "NO 😢"}
-          </motion.button>
+            NO 😢
+          </button>
         </motion.div>
       </div>
 
