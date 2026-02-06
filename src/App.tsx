@@ -1,5 +1,143 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
 import { motion } from "motion/react";
+
+// Memoized Heart Component
+const FloatingHeart = memo(
+  ({
+    heart,
+  }: {
+    heart: { id: number; left: number; delay: number; duration: number };
+  }) => (
+    <motion.div
+      className="absolute text-2xl sm:text-3xl md:text-4xl pointer-events-none"
+      style={{ left: `${heart.left}%`, bottom: "-10%" }}
+      animate={{
+        y: [0, -1200],
+        x: [0, Math.sin(heart.id) * 50],
+        rotate: [0, 360],
+      }}
+      transition={{
+        duration: heart.duration,
+        repeat: Infinity,
+        delay: heart.delay,
+        ease: "linear",
+      }}
+    >
+      ❤️
+    </motion.div>
+  )
+);
+FloatingHeart.displayName = "FloatingHeart";
+
+// Memoized Sparkle Component
+const Sparkle = memo(
+  ({
+    sparkle,
+  }: {
+    sparkle: { id: number; left: number; top: number; delay: number };
+  }) => (
+    <motion.div
+      className="absolute text-yellow-300 text-sm sm:text-base"
+      style={{ left: `${sparkle.left}%`, top: `${sparkle.top}%` }}
+      animate={{
+        scale: [0, 1.5, 0],
+        opacity: [0, 1, 0],
+      }}
+      transition={{
+        duration: 2,
+        repeat: Infinity,
+        delay: sparkle.delay,
+      }}
+    >
+      ✨
+    </motion.div>
+  )
+);
+Sparkle.displayName = "Sparkle";
+
+// Memoized Media Component
+interface MediaItem {
+  id: number;
+  src: string;
+  isVideo: boolean;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  delay: number;
+  duration: number;
+  rotate: number;
+  size: number;
+}
+
+const FloatingMedia = memo(
+  ({
+    media,
+    index,
+    mediaOffsets,
+    isMobile,
+  }: {
+    media: MediaItem;
+    index: number;
+    mediaOffsets: { x: number; y: number }[];
+    isMobile: boolean;
+  }) => (
+    <motion.div
+      id={`media-${media.id}`}
+      className="absolute pointer-events-none w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] md:w-[120px] md:h-[120px]"
+      style={{
+        left: `${media.startX}%`,
+        top: `${media.startY}%`,
+      }}
+      animate={{
+        left: `${media.endX}%`,
+        top: `${media.endY}%`,
+        x: mediaOffsets[index]?.x || 0,
+        y: mediaOffsets[index]?.y || 0,
+        rotate: [media.rotate, media.rotate + 360],
+      }}
+      transition={{
+        duration: media.duration,
+        repeat: Infinity,
+        repeatType: "reverse",
+        delay: media.delay,
+        ease: "easeInOut",
+        x: { type: "spring", stiffness: 300, damping: 20 },
+        y: { type: "spring", stiffness: 300, damping: 20 },
+      }}
+    >
+      <div
+        className="relative w-full h-full overflow-hidden rounded-full"
+        style={{
+          boxShadow:
+            "0 0 1.875rem rgba(255, 105, 180, 0.8), 0 0 3.75rem rgba(255, 20, 147, 0.6)",
+          border: ".1875rem solid rgba(255, 182, 193, 0.5)",
+        }}
+      >
+        {media.isVideo ? (
+          <video
+            src={media.src}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload={isMobile ? "none" : "auto"}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <img
+            src={media.src}
+            alt="memory"
+            loading="lazy"
+            className="w-full h-full object-cover"
+          />
+        )}
+      </div>
+    </motion.div>
+  )
+);
+FloatingMedia.displayName = "FloatingMedia";
+
 import image1 from "./assets/WhatsApp Image 2026-02-06 at 12.07.24 (1).jpeg";
 import image2 from "./assets/WhatsApp Image 2026-02-06 at 12.07.24.jpeg";
 import image3 from "./assets/WhatsApp Image 2026-02-06 at 12.11.09.jpeg";
@@ -21,13 +159,24 @@ function App() {
   const [mediaOffsets, setMediaOffsets] = useState<{ x: number; y: number }[]>(
     []
   );
+  const [isMobile, setIsMobile] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Generate floating hearts once - LOTS MORE!
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Generate floating hearts - fewer on mobile
   const [hearts] = useState(() =>
-    Array.from({ length: 60 }, (_, i) => ({
+    Array.from({ length: 30 }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
       delay: Math.random() * 5,
@@ -35,9 +184,9 @@ function App() {
     }))
   );
 
-  // Generate sparkles once - MORE!
+  // Generate sparkles - fewer on mobile
   const [sparkles] = useState(() =>
-    Array.from({ length: 40 }, (_, i) => ({
+    Array.from({ length: 20 }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
       top: Math.random() * 100,
@@ -45,9 +194,9 @@ function App() {
     }))
   );
 
-  // Generate floating media (images and video)
+  // Generate floating media (images and video) - fewer on mobile
   const [floatingMedia] = useState(() => {
-    const media = [
+    const allMedia = [
       image1,
       image2,
       image3,
@@ -62,6 +211,8 @@ function App() {
       video4,
       video5,
     ];
+    // Use fewer items on mobile for performance
+    const media = window.innerWidth < 768 ? allMedia.slice(0, 6) : allMedia;
     const items = media.map((src, i) => ({
       id: i,
       src,
@@ -73,7 +224,7 @@ function App() {
       delay: Math.random() * 5,
       duration: 15 + Math.random() * 10,
       rotate: Math.random() * 360,
-      size: 100 + Math.random() * 80, // Smaller for mobile: 100-180px (was 150-250px)
+      size: 100 + Math.random() * 80,
     }));
     return items;
   });
@@ -88,8 +239,13 @@ function App() {
     return () => window.removeEventListener("mousemove", handleGlobalMouseMove);
   }, []);
 
-  // Calculate avoidance for media items
+  // Calculate avoidance for media items - optimized for mobile
   useEffect(() => {
+    // Skip collision detection on mobile for better performance
+    if (isMobile) {
+      return;
+    }
+
     const interval = setInterval(() => {
       const newOffsets = floatingMedia.map((media, index) => {
         const mediaElement = document.getElementById(`media-${media.id}`);
@@ -123,10 +279,10 @@ function App() {
       });
 
       setMediaOffsets(newOffsets);
-    }, 50);
+    }, 100); // Slower interval for better performance
 
     return () => clearInterval(interval);
-  }, [floatingMedia, mousePos, mediaOffsets]);
+  }, [floatingMedia, mousePos, mediaOffsets, isMobile]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -177,45 +333,71 @@ function App() {
     };
   }, []);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    // Stop running away if button was clicked
-    if (showStillYes) return;
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      // Stop running away if button was clicked
+      if (showStillYes) return;
+      // Disable on mobile for better performance
+      if (isMobile) return;
 
-    if (!buttonRef.current || !containerRef.current) return;
+      if (!buttonRef.current || !containerRef.current) return;
 
-    const buttonRect = buttonRef.current.getBoundingClientRect();
-    const containerRect = containerRef.current.getBoundingClientRect();
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      const containerRect = containerRef.current.getBoundingClientRect();
 
-    const buttonCenterX = buttonRect.left + buttonRect.width / 2;
-    const buttonCenterY = buttonRect.top + buttonRect.height / 2;
+      const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+      const buttonCenterY = buttonRect.top + buttonRect.height / 2;
 
-    const distanceX = e.clientX - buttonCenterX;
-    const distanceY = e.clientY - buttonCenterY;
-    const distance = Math.sqrt(distanceX ** 2 + distanceY ** 2);
+      let clientX: number;
+      let clientY: number;
 
-    const threshold = 250; // Increased from 150 to make it harder
+      if ("touches" in e) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
 
-    if (distance < threshold) {
-      const angle = Math.atan2(distanceY, distanceX);
-      const moveDistance = 150; // Increased from 80 to move faster/further
+      const distanceX = clientX - buttonCenterX;
+      const distanceY = clientY - buttonCenterY;
+      const distance = Math.sqrt(distanceX ** 2 + distanceY ** 2);
 
-      let newX = position.x - Math.cos(angle) * moveDistance;
-      let newY = position.y - Math.sin(angle) * moveDistance;
+      const threshold = 250;
 
-      const maxX = (containerRect.width - buttonRect.width) / 2;
-      const maxY = (containerRect.height - buttonRect.height) / 2;
+      if (distance < threshold) {
+        const angle = Math.atan2(distanceY, distanceX);
+        const moveDistance = 150;
 
-      newX = Math.max(-maxX, Math.min(maxX, newX));
-      newY = Math.max(-maxY, Math.min(maxY, newY));
+        let newX = position.x - Math.cos(angle) * moveDistance;
+        let newY = position.y - Math.sin(angle) * moveDistance;
 
-      setPosition({ x: newX, y: newY });
-    }
-  };
+        const maxX = (containerRect.width - buttonRect.width) / 2;
+        const maxY = (containerRect.height - buttonRect.height) / 2;
 
-  const handleNoClick = () => {
+        newX = Math.max(-maxX, Math.min(maxX, newX));
+        newY = Math.max(-maxY, Math.min(maxY, newY));
+
+        setPosition({ x: newX, y: newY });
+      }
+    },
+    [showStillYes, isMobile, position.x, position.y]
+  );
+
+  const handleNoClick = useCallback(() => {
     setShowStillYes(true);
     // Don't reset - keep it as "Still Yes" permanently
-  };
+  }, []);
+
+  // Memoize sliced arrays to prevent re-computation
+  const visibleHearts = useMemo(
+    () => hearts.slice(0, isMobile ? 15 : 30),
+    [hearts, isMobile]
+  );
+  const visibleSparkles = useMemo(
+    () => sparkles.slice(0, isMobile ? 10 : 20),
+    [sparkles, isMobile]
+  );
 
   return (
     <section className="relative flex flex-col items-center justify-center bg-linear-to-br from-pink-100 via-rose-100 to-red-100 h-screen px-5 overflow-hidden">
@@ -227,101 +409,25 @@ function App() {
         />
       </audio>
 
-      {/* Floating hearts */}
-      {hearts.map((heart) => (
-        <motion.div
-          key={heart.id}
-          className="absolute text-4xl pointer-events-none"
-          style={{ left: `${heart.left}%`, bottom: "-10%" }}
-          animate={{
-            y: [0, -1200],
-            x: [0, Math.sin(heart.id) * 50],
-            rotate: [0, 360],
-          }}
-          transition={{
-            duration: heart.duration,
-            repeat: Infinity,
-            delay: heart.delay,
-            ease: "linear",
-          }}
-        >
-          ❤️
-        </motion.div>
+      {/* Floating hearts - fewer on mobile */}
+      {visibleHearts.map((heart) => (
+        <FloatingHeart key={heart.id} heart={heart} />
       ))}
 
-      {/* Sparkles */}
-      {sparkles.map((sparkle) => (
-        <motion.div
-          key={sparkle.id}
-          className="absolute text-yellow-300"
-          style={{ left: `${sparkle.left}%`, top: `${sparkle.top}%` }}
-          animate={{
-            scale: [0, 1.5, 0],
-            opacity: [0, 1, 0],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            delay: sparkle.delay,
-          }}
-        >
-          ✨
-        </motion.div>
+      {/* Sparkles - fewer on mobile */}
+      {visibleSparkles.map((sparkle) => (
+        <Sparkle key={sparkle.id} sparkle={sparkle} />
       ))}
 
       {/* Floating media (images and video) with heart shape and glow */}
       {floatingMedia.map((media, index) => (
-        <motion.div
+        <FloatingMedia
           key={media.id}
-          id={`media-${media.id}`}
-          className="absolute pointer-events-none w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] md:w-[120px] md:h-[120px]"
-          style={{
-            left: `${media.startX}%`,
-            top: `${media.startY}%`,
-          }}
-          animate={{
-            left: `${media.endX}%`,
-            top: `${media.endY}%`,
-            x: mediaOffsets[index]?.x || 0,
-            y: mediaOffsets[index]?.y || 0,
-            rotate: [media.rotate, media.rotate + 360],
-          }}
-          transition={{
-            duration: media.duration,
-            repeat: Infinity,
-            repeatType: "reverse",
-            delay: media.delay,
-            ease: "easeInOut",
-            x: { type: "spring", stiffness: 300, damping: 20 },
-            y: { type: "spring", stiffness: 300, damping: 20 },
-          }}
-        >
-          <div
-            className="relative w-full h-full overflow-hidden rounded-full"
-            style={{
-              boxShadow:
-                "0 0 1.875rem rgba(255, 105, 180, 0.8), 0 0 3.75rem rgba(255, 20, 147, 0.6)",
-              border: ".1875rem solid rgba(255, 182, 193, 0.5)",
-            }}
-          >
-            {media.isVideo ? (
-              <video
-                src={media.src}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <img
-                src={media.src}
-                alt="memory"
-                className="w-full h-full object-cover"
-              />
-            )}
-          </div>
-        </motion.div>
+          media={media}
+          index={index}
+          mediaOffsets={mediaOffsets}
+          isMobile={isMobile}
+        />
       ))}
 
       {/* Main content */}
@@ -352,8 +458,9 @@ function App() {
 
       <div
         ref={containerRef}
-        className="relative max-w-[45.75rem] p-3 sm:p-5 w-full mx-4 min-h-[20rem] sm:min-h-[25rem] md:min-h-[30rem] border-2 sm:border-4 border-pink-300 rounded-2xl flex items-center justify-center bg-white/80 backdrop-blur-sm shadow-2xl"
+        className="relative max-w-[45.75rem] p-3 sm:p-5 w-full mx-4 min-h-[20rem] sm:min-h-[25rem] md:min-h-[30rem] border-2 sm:border-4 border-pink-300 rounded-2xl flex items-center justify-center bg-white/80 backdrop-blur-sm shadow-2xl touch-none"
         onMouseMove={handleMouseMove}
+        onTouchMove={handleMouseMove}
       >
         <button className="px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-6 text-xl sm:text-2xl md:text-3xl font-bold text-white bg-linear-to-r from-pink-500 to-red-500 rounded-full shadow-lg hover:from-pink-600 hover:to-red-600 transition-all">
           YES 💖

@@ -1,1 +1,25 @@
 @import "tailwindcss";
+
+/* Mobile optimizations */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* GPU acceleration for animations */
+.motion-safe {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Optimize video rendering */
+video {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
