@@ -631,6 +631,69 @@ function App() {
             </motion.div>
           </motion.div>
 
+          {/* Floating media assets arranged randomly - simple and clean */}
+          {floatingMedia.slice(0, isMobile ? 4 : 6).map((media, i) => {
+            // Random positions for each item
+            const randomPositions = [
+              { left: 10, top: 15 },
+              { left: 75, top: 20 },
+              { left: 15, top: 65 },
+              { left: 80, top: 70 },
+              { left: 40, top: 10 },
+              { left: 50, top: 75 },
+            ];
+            const pos = randomPositions[i];
+
+            return (
+              <motion.div
+                key={`celebration-${i}`}
+                className="absolute"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{
+                  scale: 1,
+                  opacity: 1,
+                  y: [0, -15, 0],
+                }}
+                transition={{
+                  delay: 0.5 + i * 0.15,
+                  scale: { duration: 0.6, type: "spring" },
+                  opacity: { duration: 0.6 },
+                  y: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
+                }}
+                style={{
+                  left: `${pos.left}%`,
+                  top: `${pos.top}%`,
+                }}
+              >
+                <div
+                  className="w-[90px] h-[90px] sm:w-[110px] sm:h-[110px] md:w-[130px] md:h-[130px] rounded-full overflow-hidden"
+                  style={{
+                    boxShadow:
+                      "0 0 30px rgba(255, 255, 255, 0.9), 0 0 60px rgba(255, 182, 193, 0.8), 0 0 90px rgba(255, 105, 180, 0.6)",
+                    border: "4px solid rgba(255, 255, 255, 0.8)",
+                  }}
+                >
+                  {media.isVideo ? (
+                    <video
+                      src={media.src}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <img
+                      src={media.src}
+                      alt="memory"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+
           {/* Floating hearts animation */}
           <motion.div
             className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 sm:gap-8 pb-8 sm:pb-12"
