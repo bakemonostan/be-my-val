@@ -377,40 +377,42 @@ function App() {
 
         setPosition({ x: newX, y: newY });
 
-        // Track dodges and show random sweet messages every 5th interval
-        noDodgeCountRef.current += 1;
-        const count = noDodgeCountRef.current;
+        // Track dodges and show random sweet messages every 5th interval (MOBILE ONLY)
+        if (isMobile) {
+          noDodgeCountRef.current += 1;
+          const count = noDodgeCountRef.current;
 
-        // Sweet messages to show randomly
-        const sweetMessages = [
-          "💔 You are breaking my heart 😢",
-          "😭 Come on Pookie 😭",
-          "🧎 Should I kneel down? 😭😭",
-          "🥺 Please baby, just one chance 🥺",
-          "💕 I promise to make you happy 💕",
-          "😢 Don't do this to me 😢",
-          "🌹 You're my everything 🌹",
-          "💖 I'll wait forever for you 💖",
-          "💞 Just say yes, pretty please 💞",
-          "✨ You're the one I've been waiting for ✨",
-        ];
+          // Sweet messages to show randomly
+          const sweetMessages = [
+            "💔 You are breaking my heart 😢",
+            "😭 Come on Pookie 😭",
+            "🧎 Should I kneel down? 😭😭",
+            "🥺 Please baby, just one chance 🥺",
+            "💕 I promise to make you happy 💕",
+            "😢 Don't do this to me 😢",
+            "🌹 You're my everything 🌹",
+            "💖 I'll wait forever for you 💖",
+            "💞 Just say yes, pretty please 💞",
+            "✨ You're the one I've been waiting for ✨",
+          ];
 
-        // Show random message every 5th dodge
-        if (count % 5 === 0) {
-          const randomMessage =
-            sweetMessages[Math.floor(Math.random() * sweetMessages.length)];
-          toast(randomMessage, {
-            duration: 3000,
-            position: "bottom-center",
-            style: {
-              background: "#ef4444",
-              color: "#fff",
-              fontSize: isMobile ? "16px" : "18px",
-              fontWeight: "600",
-              borderRadius: "9999px",
-              padding: "12px 24px",
-            },
-          });
+          // Show random message every 5th dodge
+          if (count % 5 === 0) {
+            const randomMessage =
+              sweetMessages[Math.floor(Math.random() * sweetMessages.length)];
+            toast(randomMessage, {
+              duration: 3000,
+              position: "bottom-center",
+              style: {
+                background: "#ef4444",
+                color: "#fff",
+                fontSize: "16px",
+                fontWeight: "600",
+                borderRadius: "9999px",
+                padding: "12px 24px",
+              },
+            });
+          }
         }
       }
     },
