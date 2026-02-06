@@ -334,9 +334,6 @@ function App() {
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
-      // Disable on mobile for better performance
-      if (isMobile) return;
-
       if (!buttonRef.current || !containerRef.current) return;
 
       const buttonRect = buttonRef.current.getBoundingClientRect();
@@ -360,11 +357,12 @@ function App() {
       const distanceY = clientY - buttonCenterY;
       const distance = Math.sqrt(distanceX ** 2 + distanceY ** 2);
 
-      const threshold = 250;
+      // Smaller threshold on mobile for better UX
+      const threshold = isMobile ? 150 : 250;
 
       if (distance < threshold) {
         const angle = Math.atan2(distanceY, distanceX);
-        const moveDistance = 150;
+        const moveDistance = isMobile ? 100 : 150;
 
         let newX = position.x - Math.cos(angle) * moveDistance;
         let newY = position.y - Math.sin(angle) * moveDistance;
