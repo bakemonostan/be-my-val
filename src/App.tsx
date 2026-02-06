@@ -381,7 +381,7 @@ function App() {
                 : { color: "#4b5563", backgroundColor: "#e5e7eb" }
             }
           >
-            {showStillYes ? "Still Yes 😝" : "NO 😢"}
+            {showStillYes ? "Still Yes boo 😘" : "NO 😢"}
           </motion.button>
         </motion.div>
       </div>
