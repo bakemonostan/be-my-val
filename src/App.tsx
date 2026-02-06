@@ -381,12 +381,6 @@ function App() {
     [isMobile, position.x, position.y]
   );
 
-  const handleNoClick = useCallback((e: React.MouseEvent) => {
-    // Prevent the click - button should never be clickable
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
   // Memoize sliced arrays to prevent re-computation
   const visibleHearts = useMemo(
     () => hearts.slice(0, isMobile ? 15 : 30),
@@ -469,8 +463,7 @@ function App() {
         >
           <button
             ref={buttonRef}
-            onClick={handleNoClick}
-            className="px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 text-lg sm:text-xl md:text-2xl font-bold rounded-full shadow-lg select-none bg-gray-200 text-gray-600 cursor-pointer"
+            className="px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 text-lg sm:text-xl md:text-2xl font-bold rounded-full shadow-lg select-none bg-gray-200 text-gray-600 pointer-events-none"
           >
             NO 😢
           </button>
