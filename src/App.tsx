@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
 import { motion } from "motion/react";
 import confettiLib from "canvas-confetti";
+import toast, { Toaster } from "react-hot-toast";
 
 // Memoized Heart Component
 const FloatingHeart = memo(
@@ -161,6 +162,7 @@ function App() {
   );
   const [isMobile, setIsMobile] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const noDodgeCountRef = useRef(0);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -374,6 +376,42 @@ function App() {
         const newY = -Math.sin(angle) * maxY;
 
         setPosition({ x: newX, y: newY });
+
+        // Track dodges and show random sweet messages every 5th interval
+        noDodgeCountRef.current += 1;
+        const count = noDodgeCountRef.current;
+
+        // Sweet messages to show randomly
+        const sweetMessages = [
+          "💔 You are breaking my heart 😢",
+          "😭 Come on Pookie 😭",
+          "🧎 Should I kneel down? 😭😭",
+          "🥺 Please baby, just one chance 🥺",
+          "💕 I promise to make you happy 💕",
+          "😢 Don't do this to me 😢",
+          "🌹 You're my everything 🌹",
+          "💖 I'll wait forever for you 💖",
+          "💞 Just say yes, pretty please 💞",
+          "✨ You're the one I've been waiting for ✨",
+        ];
+
+        // Show random message every 5th dodge
+        if (count % 5 === 0) {
+          const randomMessage =
+            sweetMessages[Math.floor(Math.random() * sweetMessages.length)];
+          toast(randomMessage, {
+            duration: 3000,
+            position: "bottom-center",
+            style: {
+              background: "#ef4444",
+              color: "#fff",
+              fontSize: isMobile ? "16px" : "18px",
+              fontWeight: "600",
+              borderRadius: "9999px",
+              padding: "12px 24px",
+            },
+          });
+        }
       }
     },
     [isMobile]
@@ -445,6 +483,9 @@ function App() {
 
   return (
     <section className="relative flex flex-col items-center justify-center bg-linear-to-br from-pink-100 via-rose-100 to-red-100 h-screen px-5 overflow-hidden">
+      {/* Toast Container */}
+      <Toaster />
+
       {/* Audio player - A Thousand Years by Christina Perri */}
       <audio ref={audioRef} autoPlay loop muted>
         <source
