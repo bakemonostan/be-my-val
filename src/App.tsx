@@ -159,6 +159,7 @@ function App() {
     []
   );
   const [isMobile, setIsMobile] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -377,6 +378,10 @@ function App() {
     [isMobile]
   );
 
+  const handleYesClick = useCallback(() => {
+    setShowCelebration(true);
+  }, []);
+
   // Memoize sliced arrays to prevent re-computation
   const visibleHearts = useMemo(
     () => hearts.slice(0, isMobile ? 15 : 30),
@@ -385,6 +390,19 @@ function App() {
   const visibleSparkles = useMemo(
     () => sparkles.slice(0, isMobile ? 10 : 20),
     [sparkles, isMobile]
+  );
+
+  // Generate celebration confetti - fewer on mobile
+  const [confetti] = useState(() =>
+    Array.from({ length: 50 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      delay: Math.random() * 0.5,
+      duration: 2 + Math.random() * 1,
+      emoji: ["🎉", "💕", "❤️", "✨", "🎊", "💖"][
+        Math.floor(Math.random() * 6)
+      ],
+    }))
   );
 
   return (
@@ -450,7 +468,10 @@ function App() {
         onMouseMove={handleMouseMove}
         onTouchMove={handleMouseMove}
       >
-        <button className="px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-6 text-xl sm:text-2xl md:text-3xl font-bold text-white bg-linear-to-r from-pink-500 to-red-500 rounded-full shadow-lg hover:from-pink-600 hover:to-red-600 transition-all">
+        <button
+          onClick={handleYesClick}
+          className="px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-6 text-xl sm:text-2xl md:text-3xl font-bold text-white bg-linear-to-r from-pink-500 to-red-500 rounded-full shadow-lg hover:from-pink-600 hover:to-red-600 transition-all active:scale-95"
+        >
           YES 💖
         </button>
         <motion.div
@@ -469,6 +490,93 @@ function App() {
       <p className="mt-4 sm:mt-6 text-pink-600 text-base sm:text-lg italic px-4 text-center">
         Hint: Try clicking NO... if you can 😉
       </p>
+
+      {/* Celebration Overlay */}
+      {showCelebration && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-linear-to-br from-pink-400 via-red-400 to-pink-500 z-50 flex flex-col items-center justify-center px-4"
+        >
+          {/* Confetti - fewer on mobile */}
+          {confetti.slice(0, isMobile ? 25 : 50).map((item) => (
+            <motion.div
+              key={item.id}
+              className="absolute text-3xl sm:text-4xl md:text-5xl"
+              style={{ left: `${item.left}%`, top: "-10%" }}
+              animate={{
+                y: [0, window.innerHeight + 100],
+                rotate: [0, 360, 720],
+                x: [0, Math.sin(item.id) * 100],
+              }}
+              transition={{
+                duration: item.duration,
+                delay: item.delay,
+                ease: "easeIn",
+              }}
+            >
+              {item.emoji}
+            </motion.div>
+          ))}
+
+          {/* Main Message */}
+          <motion.div
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", duration: 1, delay: 0.3 }}
+            className="text-center z-10"
+          >
+            <h1
+              className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-4 sm:mb-6"
+              style={{ fontFamily: "'Pacifico', cursive" }}
+            >
+              YAYYYY! 🎉
+            </h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="text-xl sm:text-2xl md:text-3xl text-white mb-6 sm:mb-8"
+            >
+              I knew you'd say yes! 💕
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.2 }}
+              className="text-base sm:text-lg md:text-xl text-white/90 max-w-md mx-auto"
+            >
+              You just made me the happiest person! 😊✨
+            </motion.div>
+          </motion.div>
+
+          {/* Floating hearts animation */}
+          <motion.div
+            className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 sm:gap-8 pb-8 sm:pb-12"
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 1.5 }}
+          >
+            {[...Array(5)].map((_, i) => (
+              <motion.div
+                key={i}
+                animate={{
+                  y: [0, -20, 0],
+                  scale: [1, 1.2, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  delay: i * 0.2,
+                }}
+                className="text-4xl sm:text-5xl md:text-6xl"
+              >
+                ❤️
+              </motion.div>
+            ))}
+          </motion.div>
+        </motion.div>
+      )}
     </section>
   );
 }
