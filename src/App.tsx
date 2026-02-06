@@ -362,21 +362,19 @@ function App() {
 
       if (distance < threshold) {
         const angle = Math.atan2(distanceY, distanceX);
-        const moveDistance = isMobile ? 100 : 150;
 
-        let newX = position.x - Math.cos(angle) * moveDistance;
-        let newY = position.y - Math.sin(angle) * moveDistance;
-
+        // Calculate max boundaries
         const maxX = (containerRect.width - buttonRect.width) / 2;
         const maxY = (containerRect.height - buttonRect.height) / 2;
 
-        newX = Math.max(-maxX, Math.min(maxX, newX));
-        newY = Math.max(-maxY, Math.min(maxY, newY));
+        // Jump to the opposite edge - all the way!
+        const newX = -Math.cos(angle) * maxX;
+        const newY = -Math.sin(angle) * maxY;
 
         setPosition({ x: newX, y: newY });
       }
     },
-    [isMobile, position.x, position.y]
+    [isMobile]
   );
 
   // Memoize sliced arrays to prevent re-computation
